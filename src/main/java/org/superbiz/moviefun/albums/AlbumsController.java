@@ -1,6 +1,8 @@
 package org.superbiz.moviefun.albums;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.Map;
@@ -10,7 +12,9 @@ public class AlbumsController {
 
     private final AlbumsBean albumsBean;
 
-    public AlbumsController(AlbumsBean albumsBean) {
+
+    public AlbumsController(@Autowired  AlbumsBean albumsBean
+                            ) {
         this.albumsBean = albumsBean;
     }
 
