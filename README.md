@@ -13,3 +13,8 @@ $ mvn clean package -DskipTests -Dmaven.test.skip=true
 ```
 $ MOVIE_FUN_URL=http://moviefun.example.com mvn test
 ```
+
+CREATE USER 'root'@'%' IDENTIFIED BY 'password';
+
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
+gradlew replatformingSpringBootification -PmovieFunUrl=https://moviefun-noisy-echidna-wj.cfapps.io
