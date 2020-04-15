@@ -13,3 +13,6 @@ $ mvn clean package -DskipTests -Dmaven.test.skip=true
 ```
 $ MOVIE_FUN_URL=http://moviefun.example.com mvn test
 ```
+
+set VCAP_SERVICES={"p-mysql": [{"credentials": {"jdbcUrl": "jdbc:mysql://localhost:3306/albums?user=root&password=password&useSSL=false&allowPublicKeyRetrieval=true"}, "name": "albums-mysql"}, {"credentials": {"jdbcUrl": "jdbc:mysql://localhost:3306/movies?user=root&password=password&useSSL=false&allowPublicKeyRetrieval=true"}, "name": "movies-mysql"}]}
+

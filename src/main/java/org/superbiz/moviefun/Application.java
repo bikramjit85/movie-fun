@@ -100,7 +100,7 @@ public class Application {
      transactionManager.setEntityManagerFactory(albumEntityManager().getObject() );
      return transactionManager;
     }
-    
+
     @Bean
     public PlatformTransactionManager movieTransactionManager(){
         JpaTransactionManager transactionManager= new JpaTransactionManager();
