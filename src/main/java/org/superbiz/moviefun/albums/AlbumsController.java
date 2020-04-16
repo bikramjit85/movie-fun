@@ -1,20 +1,24 @@
 package org.superbiz.moviefun.albums;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.superbiz.moviefun.blobstore.Blob;
+import org.superbiz.moviefun.blobstore.BlobStore;
+import org.superbiz.moviefun.blobstore.FileStore;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.lang.ClassLoader.getSystemResource;
 import static java.lang.String.format;
@@ -24,12 +28,20 @@ import static java.nio.file.Files.readAllBytes;
 @RequestMapping("/albums")
 public class AlbumsController {
 
-    private final AlbumsBean albumsBean;
+    @Autowired
+    private AlbumsBean albumsBean;
 
+    @Autowired
+    private org.superbiz.moviefun.blobstore.FileStore fileStore;
+/*
     public AlbumsController(AlbumsBean albumsBean) {
         this.albumsBean = albumsBean;
     }
-
+    public AlbumsController(AlbumsBean albumsBean, FileStore fileStore) {
+        this.albumsBean = albumsBean;
+        this.fileStore = fileStore;
+    }
+*/
 
     @GetMapping
     public String index(Map<String, Object> model) {
@@ -45,22 +57,35 @@ public class AlbumsController {
 
     @PostMapping("/{albumId}/cover")
     public String uploadCover(@PathVariable long albumId, @RequestParam("file") MultipartFile uploadedFile) throws IOException {
-        saveUploadToFile(uploadedFile, getCoverFile(albumId));
+       // saveUploadToFile(uploadedFile, getCoverFile(albumId));
+        // String coverFileName = format("covers/%d", albumId);
 
+        String contentType = uploadedFile.getContentType();
+        InputStream inputStream = uploadedFile.getInputStream();
+        Blob b = new Blob(albumId+"", inputStream, contentType);
+
+        fileStore.put(b);
         return format("redirect:/albums/%d", albumId);
     }
 
     @GetMapping("/{albumId}/cover")
     public HttpEntity<byte[]> getCover(@PathVariable long albumId) throws IOException, URISyntaxException {
-        Path coverFilePath = getExistingCoverPath(albumId);
+       /* Path coverFilePath = getExistingCoverPath(albumId);
         byte[] imageBytes = readAllBytes(coverFilePath);
-        HttpHeaders headers = createImageHttpHeaders(coverFilePath, imageBytes);
+        HttpHeaders headers1 = createImageHttpHeaders(coverFilePath, imageBytes);
+*/
+         Optional<Blob>  op = fileStore.get(albumId+"");
 
-        return new HttpEntity<>(imageBytes, headers);
+        byte[] bytes = IOUtils.toByteArray(op.get().inputStream);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(op.get().contentType));
+        headers.setContentLength(bytes.length);
+
+        return new HttpEntity<>(bytes, headers);
     }
 
 
-    private void saveUploadToFile(@RequestParam("file") MultipartFile uploadedFile, File targetFile) throws IOException {
+    private void saveUploadToFile1(@RequestParam("file") MultipartFile uploadedFile, File targetFile) throws IOException {
         targetFile.delete();
         targetFile.getParentFile().mkdirs();
         targetFile.createNewFile();
@@ -70,7 +95,7 @@ public class AlbumsController {
         }
     }
 
-    private HttpHeaders createImageHttpHeaders(Path coverFilePath, byte[] imageBytes) throws IOException {
+    private HttpHeaders createImageHttpHeaders1(Path coverFilePath, byte[] imageBytes) throws IOException {
         String contentType = new Tika().detect(coverFilePath);
 
         HttpHeaders headers = new HttpHeaders();
@@ -84,7 +109,7 @@ public class AlbumsController {
         return new File(coverFileName);
     }
 
-    private Path getExistingCoverPath(@PathVariable long albumId) throws URISyntaxException {
+    private Path getExistingCoverPath1(@PathVariable long albumId) throws URISyntaxException {
         File coverFile = getCoverFile(albumId);
         Path coverFilePath;
 
